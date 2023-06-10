@@ -1,0 +1,11 @@
+*.txt
+*.db
+*.log
+*.html
+*.json
+*.json5
+__pycache__/
+.idea/
+venv/
+
+!requirements.txt

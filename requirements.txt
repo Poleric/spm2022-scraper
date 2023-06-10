@@ -1,0 +1,4 @@
+requests
+numpy
+pdf2image
+pyzbar
