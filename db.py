@@ -23,7 +23,7 @@ class DB:
         
         CREATE TABLE IF NOT EXISTS grades (
             grade_id INTEGER PRIMARY KEY,
-            nokp INTEGER,
+            nokp TEXT,
             subject_id INTEGER,
             grade TEXT,
             FOREIGN KEY(nokp) REFERENCES students(nokp),
@@ -72,8 +72,7 @@ class DB:
         self.dbconn.execute(stmt, (subject_id, subject_name))
 
     def store_grade(self, nokp, subject_id, grade) -> None:
-        if grade == "T":  # rename grade
-            grade = "TH"
+        grade = grade.strip()  # tidak hadir have the habit of being parsed as "T " with a trailing space.
 
         stmt = """
         INSERT INTO grades (nokp, subject_id, grade) VALUES (?, ?, ?);
@@ -92,4 +91,4 @@ if __name__ == "__main__":
         import scrape
         student_data = scrape.get_student_data("angka_giliran", "nokp")
         db.store_data(student_data)
-    
+
