@@ -4,6 +4,7 @@
 *.html
 *.json
 *.json5
+*.pdf
 __pycache__/
 .idea/
 venv/
