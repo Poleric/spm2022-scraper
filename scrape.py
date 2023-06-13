@@ -5,6 +5,7 @@ import numpy as np
 from pyzbar.pyzbar import decode, ZBarSymbol, Decoded
 import re
 import json
+import os
 
 
 def spm_slip_url(angka_giliran: str, nokp: str) -> str:
@@ -67,6 +68,20 @@ def get_student_json_from_html(html: str) -> dict:
     # get "var rec = {"idx": ..., "ic": ..., ...}" inside <script></script>
     var_str = re.search(r"var rec = ({.+})", html)[1]
     return json.loads(var_str)
+
+
+def download_slip_pdf(angka_giliran: str, nokp: str, dir="./pdf") -> None:
+    """Downloads the results slip pdf. File is named after the angka giliran. Specify `dir` if want to save it elsewhere."""
+
+    os.makedirs(dir, exist_ok=True)
+
+    slip_pdf_url = spm_slip_url(angka_giliran, nokp)
+
+    pdf_ret = requests.get(slip_pdf_url, verify=False, stream=True)
+    pdf_ret.raise_for_status()
+    with open(f"{dir}/{angka_giliran}.pdf", 'wb') as f:
+        for chunk in pdf_ret.iter_content(chunk_size=2000):
+            f.write(chunk)
 
 
 def get_student_data(angka_giliran: str, nokp: str) -> dict:
