@@ -5,11 +5,12 @@ import numpy as np
 from pyzbar.pyzbar import decode, ZBarSymbol, Decoded
 import re
 import json
-import os
+# import os
+import logging
 
 
 def spm_slip_url(angka_giliran: str, nokp: str) -> str:
-    """derived from the script from https://myresultspm.moe.gov.my/"""
+    """Derived from the script from https://myresultspm.moe.gov.my/"""
 
     angka_giliran, nokp = angka_giliran.upper(), nokp.upper()
 
@@ -31,6 +32,21 @@ def spm_slip_url(angka_giliran: str, nokp: str) -> str:
         url = "/result/SPM-2022/99/" + hashed.hexdigest() + ".pdf"
 
     return "https://myresultspm.moe.gov.my" + url
+
+
+# // no longer works
+# def download_slip_pdf(angka_giliran: str, nokp: str, dir="./pdf") -> None:
+#     """Downloads the results slip pdf. File is named after the angka giliran. Specify `dir` if want to save it elsewhere."""
+#
+#     os.makedirs(dir, exist_ok=True)
+#
+#     slip_pdf_url = spm_slip_url(angka_giliran, nokp)
+#
+#     pdf_ret = requests.get(slip_pdf_url, verify=False, stream=True)
+#     pdf_ret.raise_for_status()
+#     with open(f"{dir}/{angka_giliran}.pdf", 'wb') as f:
+#         for chunk in pdf_ret.iter_content(chunk_size=2000):
+#             f.write(chunk)
 
 
 def get_qrs_from_pdf(pdf_bytes: bytes) -> list[Decoded, ...]:
@@ -70,21 +86,7 @@ def get_student_json_from_html(html: str) -> dict:
     return json.loads(var_str)
 
 
-def download_slip_pdf(angka_giliran: str, nokp: str, dir="./pdf") -> None:
-    """Downloads the results slip pdf. File is named after the angka giliran. Specify `dir` if want to save it elsewhere."""
-
-    os.makedirs(dir, exist_ok=True)
-
-    slip_pdf_url = spm_slip_url(angka_giliran, nokp)
-
-    pdf_ret = requests.get(slip_pdf_url, verify=False, stream=True)
-    pdf_ret.raise_for_status()
-    with open(f"{dir}/{angka_giliran}.pdf", 'wb') as f:
-        for chunk in pdf_ret.iter_content(chunk_size=2000):
-            f.write(chunk)
-
-
-def get_student_data(angka_giliran: str, nokp: str) -> dict:
+def get_student_data(angka_giliran: str, pdf_file_path: str) -> dict:
     """Get student and results data in a dict.
 
     Keys & values reference, all values' type is string.
@@ -132,17 +134,17 @@ def get_student_data(angka_giliran: str, nokp: str) -> dict:
     }
     """
 
-    slip_pdf_url = spm_slip_url(angka_giliran, nokp)
-
-    pdf_ret = requests.get(slip_pdf_url, verify=False)
-    pdf_ret.raise_for_status()
-    semakan_url = get_semakan_url_from_pdf(pdf_ret.content)
+    with open(pdf_file_path, "rb") as f:
+        semakan_url = get_semakan_url_from_pdf(f.read())
 
     slip_html = get_slip_html(semakan_url, angka_giliran)
 
     return get_student_json_from_html(slip_html)
 
 
+logging.info(
+    "As a 14 June 2023, 6p.m. https://myresultspm.moe.gov.my/ is no longer accepting requests, you can no longer *download* results slip pdf.\n"
+    "Now it's required to have the results slip pdf file to scrape data."
+)
 if __name__ == "__main__":
-    print(json.dumps(get_student_data("angka_giliran", "ic"), indent=4))
-
+    print(json.dumps(get_student_data("angka_giliran", "./pdf_file_path"), indent=4))
